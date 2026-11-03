@@ -323,7 +323,11 @@ def train(force=False, synthetic=False, tests=True):
     else:
         print("Model is up to date with data + config - skipping training (use --force to retrain)")
     if tests:
-        run([PY, "-m", "pytest", "-q", "tests"], check=False)
+        rc = run([PY, "-m", "pytest", "-q", "tests"], check=False).returncode
+        if rc != 0:
+            banner("TESTS FAILED - fix them before trusting the model or the demo", "!")
+        return rc
+    return 0
 
 
 # --------------------------------------------------------------------------- #
@@ -392,7 +396,7 @@ def main():
     if args.cmd == "configure":
         sys.exit(0 if configure(args.yes, args.reconfigure) else 1)
     if args.cmd == "train":
-        train(args.force, args.synthetic, not args.no_tests)
+        sys.exit(train(args.force, args.synthetic, not args.no_tests))
         return
     if args.cmd == "serve":
         serve(args.port, args.auto_monitor, args.host_target, args.open)
@@ -407,15 +411,16 @@ def main():
         configured = configure(args.yes)
     if have_real and configured:
         banner("STEP 3/4  train on REAL data")
-        train(args.force)
+        test_rc = train(args.force)
     elif args.no_demo:
         sys.exit("Stopping: real data not ready and --no-demo was given.")
     else:
         why = "not downloaded" if not have_real else "label column not configured"
         banner(f"STEP 3/4  REAL DATA {why.upper()} -> SYNTHETIC DEMO ONLY\n"
                "Results below are NOT project results. Fix the steps above and re-run.", "!")
-        train(args.force, synthetic=True)
+        test_rc = train(args.force, synthetic=True)
     if args.no_serve:
+        sys.exit(test_rc)  # CI path: a failing test must turn the build red
         return
     banner("STEP 4/4  serve")
     serve(args.port, args.auto_monitor, args.host_target, args.open)
