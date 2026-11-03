@@ -1,0 +1,14 @@
+{
+  "_README": "Fill this in AFTER running: python inspect_dataset.py dataset/   Keys starting with _ are comments.",
+  "data_path": "dataset",
+  "label_column": null,
+  "feature_columns": null,
+  "drop_columns": [],
+  "group_column": null,
+  "time_column": null,
+  "split_strategy": "auto",
+  "test_size": 0.2,
+  "random_state": 42,
+  "sample_rows": null,
+  "max_categories": 50
+}

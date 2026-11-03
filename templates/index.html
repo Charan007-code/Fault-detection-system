@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Network Fault Detection</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <!-- Chart.js 4.4.1 is bundled locally so the demo works offline; CDN is the fallback -->
+  <script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+  <script>window.Chart || document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>')</script>
+</head>
+<body>
+  <header>
+    <h1>AI-Based Network Fault Detection</h1>
+    <span id="model-badge" class="badge">loading model…</span>
+  </header>
+
+  <div id="synthetic-banner" class="banner hidden">
+    The loaded model was trained on <strong>SYNTHETIC</strong> test data. Its predictions show the software works,
+    and say nothing about real network faults. Train on the real dataset to replace it.
+  </div>
+
+  <main>
+    <!-- Live monitoring -->
+    <section class="card wide">
+      <div class="card-head">
+        <h2>Live Monitoring <small>(this computer)</small></h2>
+        <div class="controls">
+          <input id="host" value="8.8.8.8" aria-label="Target host">
+          <button id="btn-monitor">Measure now</button>
+          <label><input type="checkbox" id="auto"> auto every 10 s</label>
+        </div>
+      </div>
+      <div class="tiles" id="tiles"></div>
+      <p class="muted" id="monitor-method"></p>
+      <p class="muted" id="coverage"></p>
+      <div class="charts">
+        <div class="chart-box"><canvas id="latencyChart"></canvas></div>
+        <div class="chart-box"><canvas id="trafficChart"></canvas></div>
+      </div>
+    </section>
+
+    <!-- Automation status -->
+    <section class="card wide">
+      <h2>Automatic Monitoring</h2>
+      <p id="auto-status" class="muted">checking…</p>
+      <ul id="alerts" class="alerts"></ul>
+    </section>
+
+    <!-- Predict -->
+    <section class="card">
+      <h2>Fault Prediction</h2>
+      <p class="muted">Fields come from the trained model's feature list. Empty fields are imputed (max 50%).</p>
+      <form id="predict-form"></form>
+      <div class="controls">
+        <button id="btn-fill" type="button" class="secondary">Fill from live monitor</button>
+        <button id="btn-predict" type="button">Predict</button>
+      </div>
+      <div id="result" class="result hidden"></div>
+    </section>
+
+    <!-- Model -->
+    <section class="card">
+      <h2>Model Evaluation</h2>
+      <div id="model-info" class="muted">No model loaded.</div>
+      <div class="chart-box"><canvas id="classChart"></canvas></div>
+      <details>
+        <summary>Confusion matrix &amp; feature importance</summary>
+        <img id="cm-img" alt="Confusion matrix">
+        <img id="fi-img" alt="Feature importance">
+      </details>
+    </section>
+
+    <!-- History -->
+    <section class="card wide">
+      <div class="card-head">
+        <h2>History</h2>
+        <div class="controls">
+          <select id="history-type">
+            <option value="predictions">Predictions</option>
+            <option value="monitoring">Monitoring</option>
+          </select>
+          <button id="btn-history" class="secondary">Refresh</button>
+        </div>
+      </div>
+      <div class="table-wrap"><table id="history"></table></div>
+    </section>
+  </main>
+
+  <footer>Random Forest · scikit-learn · Flask · SQLite</footer>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

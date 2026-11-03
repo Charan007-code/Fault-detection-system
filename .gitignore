@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Data: the real dataset is large and has its own licence - download it, don't commit it
+dataset/**/*.csv
+dataset/**/*.zip
+
+# Generated artefacts (re-create with train_model.py / app.py)
+model/**/*.joblib
+reports/**/*.png
+reports/**/*.json
+reports/**/*.txt
+database/*.db
