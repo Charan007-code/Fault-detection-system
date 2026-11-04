@@ -62,14 +62,19 @@ def run(cmd, check=True):
 def check_env():
     if sys.version_info < (3, 10):
         sys.exit(f"Python 3.10+ required, you have {sys.version.split()[0]}")
-    missing = []
+    missing, broken = [], []
     for mod in ("flask", "sklearn", "pandas", "numpy", "joblib", "matplotlib", "psutil"):
         try:
             __import__(mod)
         except ImportError:
             missing.append(mod)
+        except Exception as exc:  # installed but corrupted (e.g. interrupted pip install)
+            broken.append(f"{mod}: {type(exc).__name__}: {exc}")
     if missing:
         sys.exit(f"Missing packages: {missing}\nRun:  {PY} -m pip install -r requirements.txt")
+    if broken:
+        sys.exit("Installed packages are corrupted:\n  " + "\n  ".join(broken) +
+                 f"\nRepair:  {PY} -m pip install --force-reinstall --no-cache-dir -r requirements.txt")
     print("Environment OK:", sys.version.split()[0])
 
 
