@@ -160,7 +160,10 @@ def find_downloaded_zip():
     """Look for a zip the user already downloaded from the Mendeley page."""
     home = os.path.expanduser("~")
     pats = ["*LCORE*.zip", "*lcore*.zip", f"*{DATASET_ID}*.zip"]
-    for folder in (os.path.join(home, "Downloads"), home, "dataset"):
+    folders = [os.path.join(home, "Downloads"), home, "dataset"]
+    # WSL: the browser saved the zip to the *Windows* Downloads folder.
+    folders += sorted(glob.glob("/mnt/c/Users/*/Downloads"))
+    for folder in folders:
         for pat in pats:
             hits = sorted(glob.glob(os.path.join(folder, pat)), key=os.path.getmtime, reverse=True)
             if hits:
