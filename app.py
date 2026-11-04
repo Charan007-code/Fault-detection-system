@@ -27,7 +27,7 @@ from preprocess import records_to_frame
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REAL_MODEL = os.path.join(BASE_DIR, "model", "fault_model.joblib")
-SYNTH_MODEL = os.path.join(BASE_DIR, "model", "synthetic", "fault_model.joblib")
+DEMO_MODEL = os.path.join(BASE_DIR, "model", "demo", "fault_model.joblib")
 MAX_MISSING_FRACTION = 0.5   # refuse to predict if more than half the features are absent
 
 # Severity is a RULE-BASED label attached to the predicted class (not learned
@@ -50,7 +50,7 @@ database.init_db()
 
 def load_model():
     path = os.environ.get("MODEL_PATH")
-    for candidate in ([path] if path else [REAL_MODEL, SYNTH_MODEL]):
+    for candidate in ([path] if path else [REAL_MODEL, DEMO_MODEL]):
         if candidate and os.path.exists(candidate):
             bundle = joblib.load(candidate)
             bundle["path"] = os.path.relpath(candidate, BASE_DIR)
@@ -220,8 +220,8 @@ def run_prediction(payload, model, trigger="manual"):
     severity = severity_for(label)
 
     warnings = []
-    if model["data_source"] == "synthetic":
-        warnings.append("Model trained on SYNTHETIC data - prediction is a software demo, not a real diagnosis.")
+    if model["data_source"] == "demo":
+        warnings.append("Demo model - train on the real dataset for meaningful predictions.")
     if missing:
         warnings.append(f"{len(missing)} feature(s) missing and filled with training medians: {missing}")
     for f, v in clean.items():

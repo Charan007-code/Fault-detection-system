@@ -9,5 +9,5 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      # CI has no real dataset: this checks the code path with SYNTHETIC data only
+      # CI has no real dataset: this checks the code path with the demo data
       - run: python automate.py all --offline --no-serve

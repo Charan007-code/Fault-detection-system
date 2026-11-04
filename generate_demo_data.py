@@ -1,7 +1,7 @@
 """
-generate_synthetic.py - SYNTHETIC data, for testing the software only.
+generate_demo_data.py - generated demo data for trying the software end-to-end.
 
-    python generate_synthetic.py
+    python generate_demo_data.py
 
 !!! This data is invented by this script. A model trained on it proves that
 !!! the code runs end-to-end. It proves NOTHING about detecting real network
@@ -9,9 +9,9 @@ generate_synthetic.py - SYNTHETIC data, for testing the software only.
 
 The rules below (e.g. "congestion = high latency + high throughput") are
 hand-written, so a Random Forest will simply re-learn them. That is why the
-synthetic accuracy is high and meaningless.
+accuracy on this demo data is high and not a real result.
 
-It is written to dataset/synthetic/ and is excluded from real-data folder scans.
+It is written to dataset/demo/ and is excluded from real-data folder scans.
 """
 import os
 
@@ -20,10 +20,10 @@ import pandas as pd
 
 SEED = 42
 ROWS_PER_CLASS = 600
-OUT = os.path.join("dataset", "synthetic", "SYNTHETIC_network_data.csv")
+OUT = os.path.join("dataset", "demo", "demo_network_data.csv")
 
 # Column names deliberately match what monitor.py can measure on a laptop,
-# so the live "fill from monitor" demo works with the synthetic model.
+# so the live "fill from monitor" demo works with the demo model.
 PROFILES = {
     #               latency_ms   jitter_ms  loss_pct    throughput_mbps  if_errors/s  cpu%
     "Normal":       ((20, 8),    (2, 1),    (0.1, 0.2), (40, 15),        (0, 0.3),    (25, 10)),
@@ -56,7 +56,7 @@ def main():
     df = df.sample(frac=1, random_state=SEED).reset_index(drop=True)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     df.to_csv(OUT, index=False)
-    print(f"Wrote {len(df)} SYNTHETIC rows to {OUT}")
+    print(f"Wrote {len(df)} demo rows to {OUT}")
     print("Reminder: results on this file are NOT evidence of real fault detection.")
 
 

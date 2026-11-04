@@ -61,7 +61,7 @@ async function loadModelInfo() {
   modelInfo = info;
   badge.textContent = `model: ${info.data_source.toUpperCase()} data`;
   badge.className = `badge ${info.data_source}`;
-  $("synthetic-banner").classList.toggle("hidden", info.data_source !== "synthetic");
+  $("demo-banner").classList.toggle("hidden", info.data_source !== "demo");
 
   const m = info.metrics;
   $("model-info").innerHTML = `

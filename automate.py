@@ -18,8 +18,8 @@ What is automated, and what deliberately is NOT:
     you a model that predicts nonsense with a confident accuracy number.
   * Training is skipped when the model is newer than the data + config
     (like `make`). Use --force to retrain.
-  * No real data? The pipeline falls back to the SYNTHETIC demo, loudly,
-    and the dashboard shows the synthetic banner. --no-demo disables that.
+  * No real data yet? The pipeline falls back to the built-in demo model
+    (badge shows DEMO). --no-demo disables that.
 """
 import argparse
 import glob
@@ -83,7 +83,7 @@ def check_env():
 # --------------------------------------------------------------------------- #
 def real_csvs():
     files = glob.glob(os.path.join("dataset", "**", "*.csv"), recursive=True)
-    return sorted(f for f in files if f"{os.sep}synthetic{os.sep}" not in f)
+    return sorted(f for f in files if f"{os.sep}demo{os.sep}" not in f)
 
 
 def extract_once(zip_path, dest):
@@ -318,14 +318,14 @@ def model_is_stale():
     return newest_input > os.path.getmtime(REAL_MODEL)
 
 
-def train(force=False, synthetic=False, tests=True):
-    if synthetic:
-        if not os.path.exists("dataset/synthetic/SYNTHETIC_network_data.csv"):
-            run([PY, "generate_synthetic.py"])
-        if force or not os.path.exists("model/synthetic/fault_model.joblib"):
-            run([PY, "train_model.py", "--synthetic"])
+def train(force=False, demo=False, tests=True):
+    if demo:
+        if not os.path.exists("dataset/demo/demo_network_data.csv"):
+            run([PY, "generate_demo_data.py"])
+        if force or not os.path.exists("model/demo/fault_model.joblib"):
+            run([PY, "train_model.py", "--demo"])
         else:
-            print("Synthetic model already trained - skipping")
+            print("Demo model already trained - skipping")
     elif force or model_is_stale():
         run([PY, "train_model.py"])
     else:
@@ -382,7 +382,7 @@ def main():
     common_serve(p_all)
     p_all.add_argument("--yes", action="store_true", help="accept an unambiguous config proposal")
     p_all.add_argument("--force", action="store_true", help="retrain even if up to date")
-    p_all.add_argument("--no-demo", action="store_true", help="don't fall back to synthetic data")
+    p_all.add_argument("--no-demo", action="store_true", help="don't fall back to the demo model")
     p_all.add_argument("--no-serve", action="store_true", help="stop after training (e.g. for CI)")
 
     p_fetch = sub.add_parser("fetch")
@@ -392,7 +392,7 @@ def main():
     p_conf.add_argument("--reconfigure", action="store_true")
     p_train = sub.add_parser("train")
     p_train.add_argument("--force", action="store_true")
-    p_train.add_argument("--synthetic", action="store_true")
+    p_train.add_argument("--demo", action="store_true")
     p_train.add_argument("--no-tests", action="store_true")
     p_serve = sub.add_parser("serve")
     common_serve(p_serve)
@@ -404,7 +404,7 @@ def main():
     if args.cmd == "configure":
         sys.exit(0 if configure(args.yes, args.reconfigure) else 1)
     if args.cmd == "train":
-        sys.exit(train(args.force, args.synthetic, not args.no_tests))
+        sys.exit(train(args.force, args.demo, not args.no_tests))
         return
     if args.cmd == "serve":
         serve(args.port, args.auto_monitor, args.host_target, args.open)
@@ -424,9 +424,9 @@ def main():
         sys.exit("Stopping: real data not ready and --no-demo was given.")
     else:
         why = "not downloaded" if not have_real else "label column not configured"
-        banner(f"STEP 3/4  REAL DATA {why.upper()} -> SYNTHETIC DEMO ONLY\n"
+        banner(f"STEP 3/4  REAL DATA {why.upper()} -> DEMO MODEL\n"
                "Results below are NOT project results. Fix the steps above and re-run.", "!")
-        test_rc = train(args.force, synthetic=True)
+        test_rc = train(args.force, demo=True)
     if args.no_serve:
         sys.exit(test_rc)  # CI path: a failing test must turn the build red
         return

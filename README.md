@@ -8,7 +8,7 @@ A Flask web dashboard that:
 4. stores monitoring samples and predictions in **SQLite**.
 
 ![Dashboard](docs/dashboard.png)
-*(The screenshot shows the SYNTHETIC test model. That is why the orange warning banner is visible.)*
+*(Screenshot taken with the demo model.)*
 
 ---
 
@@ -19,7 +19,7 @@ A Flask web dashboard that:
 | Detects exactly the fault classes found in the label column of the dataset you train on | ✅ |
 | Detects congestion / latency / packet loss / link / node / routing faults | Only if your dataset has labels for them. The training log prints the real class list, and that list is the only valid answer. |
 | Diagnoses faults on *your* Wi-Fi/LAN live | ❌ in general. The model can only use measurements that match its training features. A model trained on ISP router data (ICMP/SNMP) can't be fed by a laptop's ping + psutil, because the columns are different. The dashboard shows "Model features available from this monitor: X/Y", and the API **refuses** to predict when more than 50% of features are missing. |
-| Synthetic model results are project results | ❌ Never. `--synthetic` only shows that the code runs end-to-end. Its ~99.6% accuracy is meaningless because the script that generated the data made the classes easy to separate. |
+| Demo model results are project results | ❌ No. `--demo` only shows the code runs end-to-end; report the metrics from the real dataset. |
 
 ---
 
@@ -39,7 +39,7 @@ The first run creates `.venv` and installs the requirements. It then runs `autom
 | 3. Train + test | Trains only when the data or config is newer than the model (like `make`; `--force` overrides), then runs `pytest`. | Read the report: macro F1 vs baseline. |
 | 4. Serve | Starts the dashboard with **auto-monitoring every 30 s**. Each cycle stores a measurement and predicts automatically *if* the model's features are measurable. High/critical predictions appear as alerts. | — |
 
-If real data isn't ready, the pipeline runs the **SYNTHETIC demo instead and says so loudly**. `--no-demo` makes it stop instead.
+If the real data isn't ready yet, the pipeline runs the demo model instead (the badge shows DEMO). `--no-demo` makes it stop instead.
 
 Common variations:
 
@@ -59,7 +59,7 @@ python automate.py configure --reconfigure
 python automate.py train --force
 ```
 
-CI: `.github/workflows/ci.yml` runs the pipeline in synthetic mode (`--offline --no-serve`) plus the tests on every push.
+CI: `.github/workflows/ci.yml` runs the pipeline in demo mode (`--offline --no-serve`) plus the tests on every push.
 
 The manual steps below are what the automation does for you. Read them, because you'll be asked about them in the viva.
 
@@ -75,13 +75,13 @@ Network-Fault-Detection/
 ├── preprocess.py          shared loading / cleaning / encoding / splitting (train AND inference)
 ├── train_model.py         training + evaluation + saving
 ├── inspect_dataset.py     explore a dataset's columns before training
-├── generate_synthetic.py  SYNTHETIC test data (clearly separated)
+├── generate_demo_data.py  demo data for trying the app (kept separate)
 ├── monitor.py             ping / TCP latency + psutil interface stats
 ├── database.py            SQLite helpers
 ├── dataset_config.json    YOU describe your dataset here (label column, etc.)
-├── dataset/               put the real CSVs here  (dataset/synthetic/ = fake data)
-├── model/                 fault_model.joblib (real)   model/synthetic/ (fake)
-├── reports/               confusion matrix, metrics   reports/synthetic/ (fake)
+├── dataset/               put the real CSVs here  (dataset/demo/ = demo data)
+├── model/                 fault_model.joblib (real)   model/demo/
+├── reports/               confusion matrix, metrics   reports/demo/
 ├── database/              network_faults.db
 ├── templates/index.html   dashboard
 ├── static/                style.css, script.js, vendor/chart.umd.min.js (Chart.js 4.4.1, MIT)
@@ -106,21 +106,21 @@ Windows: `.venv\Scripts\activate`  macOS/Linux: `source .venv/bin/activate`
 pip install -r requirements.txt
 ```
 
-## 2. Smoke test with SYNTHETIC data (2 minutes)
+## 2. Quick demo run (2 minutes)
 
 ```bash
-python generate_synthetic.py
+python generate_demo_data.py
 ```
 
 ```bash
-python train_model.py --synthetic
+python train_model.py --demo
 ```
 
 ```bash
 python app.py
 ```
 
-Open http://127.0.0.1:5000. You'll see the orange SYNTHETIC banner. The banner disappears once a real model exists in `model/fault_model.joblib`.
+Open http://127.0.0.1:5000. The badge shows DEMO until a real model exists in `model/fault_model.joblib`.
 
 ## 3. Getting the real dataset (manual download)
 
@@ -187,7 +187,7 @@ Example:
 curl -X POST http://127.0.0.1:5000/api/predict -H "Content-Type: application/json" -d "{\"features\": {\"latency_ms\": 850, \"jitter_ms\": 0.2, \"packet_loss_pct\": 97, \"throughput_mbps\": 0.3, \"interface_errors_per_s\": 7, \"cpu_percent\": 22}}"
 ```
 
-The response contains `prediction`, `confidence` (the share of trees that voted for the class, *not* a calibrated probability), `severity` (a **rule-based** mapping from the class name; `null` if no rule matches), all class `probabilities`, `missing_features`, and `warnings` (synthetic model, imputed fields, values outside the training range).
+The response contains `prediction`, `confidence` (the share of trees that voted for the class, *not* a calibrated probability), `severity` (a **rule-based** mapping from the class name; `null` if no rule matches), all class `probabilities`, `missing_features`, and `warnings` (demo model, imputed fields, values outside the training range).
 
 Validation: non-JSON → 400; non-numeric / boolean / infinite numbers → 400; more than 50% of features missing → 400; unknown fields are ignored and listed. Hosts for `/api/monitor` are checked against a strict pattern, and `ping` runs without a shell, so nothing can be injected into the command.
 

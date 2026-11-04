@@ -70,9 +70,9 @@ def resolve_csv_paths(data_path):
     """Turn a file / folder / glob into a sorted list of CSV files."""
     if os.path.isdir(data_path):
         paths = sorted(glob.glob(os.path.join(data_path, "**", "*.csv"), recursive=True))
-        # never mix the synthetic test data into a real-data folder scan
-        if "synthetic" not in os.path.abspath(data_path).lower():
-            paths = [p for p in paths if f"{os.sep}synthetic{os.sep}" not in p]
+        # never mix the demo data into a real-data folder scan
+        if f"{os.sep}demo" not in os.path.abspath(data_path).lower():
+            paths = [p for p in paths if f"{os.sep}demo{os.sep}" not in p]
     elif any(ch in data_path for ch in "*?["):
         paths = sorted(glob.glob(data_path, recursive=True))
     else:

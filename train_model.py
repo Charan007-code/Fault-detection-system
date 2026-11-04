@@ -2,10 +2,10 @@
 train_model.py - STEP 2: train + evaluate the Random Forest.
 
     python train_model.py                 # REAL data, settings from dataset_config.json
-    python train_model.py --synthetic     # SYNTHETIC test data -> model/synthetic/
+    python train_model.py --demo          # built-in demo data -> model/demo/
 
 Outputs (real data):            model/fault_model.joblib, reports/*
-Outputs (synthetic, separate):  model/synthetic/fault_model.joblib, reports/synthetic/*
+Outputs (demo, kept separate):  model/demo/fault_model.joblib, reports/demo/*
 """
 import argparse
 import json
@@ -31,8 +31,8 @@ from sklearn.pipeline import Pipeline  # noqa: E402
 from preprocess import (build_preprocessor, coerce_types, load_config,  # noqa: E402
                         load_dataset, select_features, split_data)
 
-SYNTHETIC_CONFIG = {
-    "data_path": "dataset/synthetic/SYNTHETIC_network_data.csv",
+DEMO_CONFIG = {
+    "data_path": "dataset/demo/demo_network_data.csv",
     "label_column": "fault_label",
     "split_strategy": "stratified",
 }
@@ -66,16 +66,16 @@ def save_feature_importance(names, importances, path, title, top=20):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default="dataset_config.json")
-    ap.add_argument("--synthetic", action="store_true",
-                    help="train on the SYNTHETIC test file instead of real data")
+    ap.add_argument("--demo", action="store_true",
+                    help="train on the built-in demo data instead of the real dataset")
     args = ap.parse_args()
 
-    if args.synthetic:
+    if args.demo:
         cfg = load_config(None)
-        cfg.update(SYNTHETIC_CONFIG)
-        source, model_dir, report_dir = "synthetic", "model/synthetic", "reports/synthetic"
+        cfg.update(DEMO_CONFIG)
+        source, model_dir, report_dir = "demo", "model/demo", "reports/demo"
         if not os.path.exists(cfg["data_path"]):
-            sys.exit("Synthetic file missing. Run:  python generate_synthetic.py")
+            sys.exit("Demo data missing. Run:  python generate_demo_data.py")
     else:
         cfg = load_config(args.config)
         source, model_dir, report_dir = "real", "model", "reports"
@@ -84,7 +84,7 @@ def main():
                      "Run  python inspect_dataset.py  first and choose it from the real columns.")
     os.makedirs(model_dir, exist_ok=True)
     os.makedirs(report_dir, exist_ok=True)
-    tag = "SYNTHETIC DATA - NOT A REAL RESULT" if source == "synthetic" else "real dataset"
+    tag = "demo data (not the real dataset)" if source == "demo" else "real dataset"
 
     # 1. Load -------------------------------------------------------------- #
     print(f"[1/8] Loading data ({tag}) from {cfg['data_path']}")
